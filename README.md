@@ -1,2 +1,1 @@
-# MS_Word_Text_Translator
-A program that translates existing text and tables in an MS Word document.
+This program reads standard text and text present in tables of an MS Word document, translates the text and stores it in a new document. 
