@@ -1,5 +1,5 @@
 import os
-#doc library
+#docx library
 import docx
 from docx.document import Document
 from docx.text.paragraph import Paragraph 
@@ -66,5 +66,5 @@ for count, block in enumerate(iter_block_items(doc1)):
             for b,cell in enumerate(row.cells):
                 translation = translator_object.translate(cell.text,'ta')
                 table.cell(a, b).text = str(translation)  #str type casting is necessary since the text function automatically assumes the TranslationResult type
-        table.style = 'Colorful List'
+        #table.style = 'Colorful List'
         doc.save('Fully Translated Document.docx')
