@@ -64,11 +64,9 @@ for count, block in enumerate(iter_block_items(doc1)):
             para_list.append(block.text) #doesnt append after block 264 but the rest of the program still executes and fails at block 310(whole thing crumbles)
         except Exception as e:
             #print("#Exception is being called.")
-            #print(para_list)
             text_segment = '\n'.join(para_list)
             data = Translate_Text(text_segment)
-            #data = text_segment
-            print(data)
+            #print(data)
             doc.add_paragraph(data)
             para_list = []
             text_segment = ""
@@ -77,7 +75,7 @@ for count, block in enumerate(iter_block_items(doc1)):
     elif isinstance(block, Table):
         n = len(block.rows)
         m = int(len(block._cells)/n)
-        print(n, m)
+        #print(n, m)
         table = doc.add_table(n, m)
         for a,row in enumerate(block.rows):
             for b,cell in enumerate(row.cells):
