@@ -76,7 +76,7 @@ for count, block in enumerate(iter_block_items(doc1)):
         n = len(block.rows)
         m = int(len(block._cells)/n)
         #print(n, m)
-        table = doc.add_table(n, m)
+        table = doc.add_table(n, m, style = 'Table Grid')
         for a,row in enumerate(block.rows):
             for b,cell in enumerate(row.cells):
                 translation = translator_object.translate(cell.text,'ta')
