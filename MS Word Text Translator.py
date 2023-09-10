@@ -12,15 +12,15 @@ from docx.shared import Pt
 from translatepy import Translator
 
 #Path of the desired new working directory
-os.chdir('C:/Users/Ab/VsCode Projects/Projects/Text Translator 2 PSG')
+os.chdir('Path of the desired new working directory')
 #New document
 doc = docx.Document()
 doc.save('Fully Translated Document 2.docx')
 #Document of choice
-doc1 = docx.Document('4. SLM Human_Resource_Management.docx')
+doc1 = docx.Document('Document of choice.docx')
 #Throwaway document
 doc2 = docx.Document()
-doc2.save('Proxy Document.docx')
+doc2.save('Throwaway Document.docx')
 print("The documents were accessed successfully.")
 
 translator_object = Translator()
