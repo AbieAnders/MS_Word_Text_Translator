@@ -7,7 +7,6 @@ from docx.enum.style import WD_STYLE_TYPE
 from docx.table import _Cell, _Row, Table
 from docx.oxml.text.paragraph import CT_P
 from docx.oxml.table import CT_Tbl
-from docx.shared import Pt
 #translatepy library
 from translatepy import Translator
 
@@ -18,15 +17,12 @@ doc = docx.Document()
 doc.save('Fully Translated Document 2.docx')
 #Document of choice
 doc1 = docx.Document('Document of choice.docx')
-#Throwaway document
-doc2 = docx.Document()
-doc2.save('Throwaway Document.docx')
 print("The documents were accessed successfully.")
 
 translator_object = Translator()
-def Translate_Text(file_text):
+def Translate_Text(file_text, language_code):
     try:
-        translation = translator_object.translate(file_text,'ta')
+        translation = translator_object.translate(file_text,str(language_code))
         if translation is None:
             return None
         return str(translation)
@@ -37,7 +33,7 @@ def Translate_Text(file_text):
         print("An error has occurred during translation:", e)
         return None
 
-def iter_block_items(parent):
+def Iter_Block_Items(parent):
     """
     Generate a reference to each paragraph and table child within *parent*,
     in document order. Each returned value is an instance of either Table or
@@ -59,61 +55,78 @@ def iter_block_items(parent):
         elif isinstance(child, CT_Tbl):
             yield Table(child, parent_elm)
 
-#Execution loop
+#The Font style is created here since direct access of the font style is not supported by the library
+def Create_Font(document, style_name):
+    doc_styles = document.styles
+    doc_charstyle = doc_styles.add_style('Ordinary ' + str(style_name), WD_STYLE_TYPE.CHARACTER)
+    obj_font = doc_charstyle.font
+    obj_font.name = str(style_name)
+    return None
 
-#Style and Font info are gathered here
+##Execution loop
+
+#Style and Font info are gathered from all the paragraphs of the document(Gathering Style and Font info from Tables is not possible in most circumstances)
 font_list = []
 style_list = []
 para_counter = 1
 for para in doc1.paragraphs:
     print("block count:", para_counter)
+    #print(para.text)
     if para.text.strip() == '':
         print(para_counter)
+        para_counter += 1
         continue
     font_list.append(para.style.font.name)
     style_list.append(para.style.name)
     para_counter += 1
+
+#This section removes all repeating Font types and the 'None' type font from font_list and stores it in a new variable.
+set_font_list = set(font_list)
+try:
+    set_font_list.remove(None)
+except:
+    print("The document does not have any 'None' type fonts.")
+set_font_list = list(set_font_list)
+#A set is an unordered collection of unique elements and so type casting a list that has repeating elements into a set removes the repeating elements.
+#The set can then be type casted into a list once again.
+set_style_list = list(set(style_list))  
+
+#print("Number of Fonts:", len(font_list))
 print(font_list)
+print(set_font_list)
+#print("Number of Styles:", len(style_list))
 print(style_list)
+print(set_style_list)
 
-#The 'Arial' font style is created here since direct access of the font style is not supported by the library
-doc_styles = doc.styles
-doc_charstyle = doc_styles.add_style('Ordinary Arial', WD_STYLE_TYPE.CHARACTER)
-obj_font = doc_charstyle.font
-obj_font.name = 'Arial'
-
-#Exists to simply check the style implementation in the English language(causes performance hit so remove it and the statements connected to it if it isnt necessary)
-doc_styles = doc2.styles
-doc_charstyle = doc_styles.add_style('Ordinary Arial', WD_STYLE_TYPE.CHARACTER)
-obj_font = doc_charstyle.font
-obj_font.name = 'Arial'
+for font in set_font_list:
+    Create_Font(doc, font)
+print("Execution of the Main block is ready to being.")
 
 #Main execution
 font_counter = 0
 style_counter = 0
-for count, block in enumerate(iter_block_items(doc1)):
+for count, block in enumerate(Iter_Block_Items(doc1)):
+    count += 1
     print("block count:", count)
     if isinstance(block, Paragraph):
+        #print(block.text)
         if block.text.strip() == '':
             print(count)
             continue
-        if(font_list[font_counter] == 'Arial'):  #(or) if(style_list[style_counter] != List Paragraph or Body Text)
-            translated_text = Translate_Text(block.text)
+        if(font_list[font_counter] in set_font_list):
+            #set_font_list.index(font_list[font_counter])
+            translated_text = Translate_Text(block.text, 'ta')
             para = doc.add_paragraph()
-            para_runner = para.add_run(translated_text, style = 'Ordinary Arial').bold = True
-            '''
-            This section is unnecessary if output in English is not required
-            #Note:This section only activates if the paragraph is found to be a heading(always has 'Arial' font type in the given document)
-            para2 = doc2.add_paragraph()
-            para_runner2 = para2.add_run(block.text, style = 'Ordinary Arial').bold = True
+            para_runner = para.add_run(translated_text, style = 'Ordinary ' + font_list[font_counter]).bold = True
             doc.save('Fully Translated Document 2.docx')
-            doc2.save('Proxy Document.docx')
-            '''
-            font_counter += 1    #Used since the continue statement prevents the font_counter statement that is found below from executing
+            font_counter += 1    #Used since the continue statement causes the font_counter incrementation that is found below to not execute.
+            #style_counter += 1   #Unncessary since it is not being used.
             continue
-        block = Translate_Text(block.text)
+        block = Translate_Text(block.text, 'ta')
         doc.add_paragraph(block)
-        doc.save('Fully Translated Document 2.docx') #Can also be omitted since all of the changes are being saved in line 129
+        doc.save('Fully Translated Document 2.docx')
+        font_counter += 1
+        style_counter += 1
     elif isinstance(block, Table):
         n = len(block.rows)
         m = int(len(block._cells)/n)
@@ -121,11 +134,13 @@ for count, block in enumerate(iter_block_items(doc1)):
         table = doc.add_table(n, m)
         for a,row in enumerate(block.rows):
             for b,cell in enumerate(row.cells):
+                if cell.text.strip() == '':
+                    print("Empty cell")
+                    continue
+                #print(cell.text)
                 translation = translator_object.translate(cell.text,'ta')
                 table.cell(a, b).text = str(translation)  #str type casting is necessary since the text function automatically assumes the TranslationResult type
         doc.save('Fully Translated Document 2.docx')
-    font_counter += 1
-    style_counter += 1
 
 #table.style = 'Colorful List'
 doc.save('Fully Translated Document 2.docx')
